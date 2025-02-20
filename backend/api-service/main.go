@@ -1,36 +1,41 @@
 package main
 
 import (
-	"log"
-
-	"github.com/gin-gonic/gin"
-	"github.com/vk-ai/vflight/api-service/config"
-	"github.com/vk-ai/vflight/api-service/routes"
+	cfg "github.com/vk-ai/vflight/commons/config"
+	"github.com/vk-ai/vflight/commons/database"
 	"github.com/vk-ai/vflight/commons/logger"
+	"go.uber.org/zap"
 )
 
 func main() {
-	// Load configuration
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
-
 	// Initialize logger
-	logger := logger.NewLogger(cfg.Environment)
+	log := logger.InitLogger("development")
+	defer log.Sync() // flushes buffer, if any
 
-	// Initialize Gin router
-	router := gin.Default()
+	logger.Info("Starting API service", zap.String("service", "api-service"))
 
-	// Setup routes
-	routes.SetupRoutes(router, cfg, logger)
+	// Initialize database config
+	dbConfig := cfg.NewDatabaseConfig()
 
-	// Start server
-	logger.Info("Starting API service", map[string]interface{}{
-		"port": cfg.Server.Port,
-	})
-
-	if err := router.Run(":" + cfg.Server.Port); err != nil {
-		logger.Fatal("Failed to start server", err)
+	// Create database connection
+	db, err := database.NewDatabase(dbConfig)
+	if err != nil {
+		logger.Fatal("Failed to initialize database", zap.Error(err))
 	}
+	defer db.Close()
+
+	// Test connection
+	if err := db.Ping(); err != nil {
+		logger.Fatal("Failed to ping database", zap.Error(err))
+	}
+
+	logger.Info("Successfully connected to database",
+		zap.String("host", dbConfig.Host),
+		zap.String("database", dbConfig.DBName),
+	)
+
+	// Initialize router and other components
+	// ... rest of your application code
+
+	logger.Info("API service is ready to handle requests")
 }
