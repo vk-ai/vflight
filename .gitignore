@@ -1,0 +1,26 @@
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+*.env
+*.env.local
+
+# Binary files
+bin/
+tmp/
+
+# Log files
+*.log
