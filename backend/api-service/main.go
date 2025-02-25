@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/vk-ai/vflight/api-service/routes"
 	cfg "github.com/vk-ai/vflight/commons/config"
 	"github.com/vk-ai/vflight/commons/database"
 	"github.com/vk-ai/vflight/commons/logger"
@@ -34,8 +35,14 @@ func main() {
 		zap.String("database", dbConfig.DBName),
 	)
 
-	// Initialize router and other components
-	// ... rest of your application code
+	// Initialize router with routes
+	router := routes.SetupRouter(db)
 
-	logger.Info("API service is ready to handle requests")
+	// Start the server
+	serverAddr := ":8080" // or get from config
+	logger.Info("User service is starting", zap.String("address", serverAddr))
+
+	if err := router.Run(serverAddr); err != nil {
+		logger.Fatal("Failed to start server", zap.Error(err))
+	}
 }

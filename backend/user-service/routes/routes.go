@@ -4,15 +4,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vk-ai/vflight/commons/database"
 	"github.com/vk-ai/vflight/commons/logger"
-	"go.uber.org/zap"
 )
 
 // SetupRouter initializes all the routes for the user service
 func SetupRouter(db *database.Database) *gin.Engine {
 	router := gin.Default()
 
+	// Initialize handler
+	handler := NewHandler(db)
+
 	// Health check route
-	router.GET("/health", healthCheck)
+	router.GET("/health", handler.HealthCheck)
 
 	// API routes group
 	v1 := router.Group("/api/v1")
@@ -20,24 +22,13 @@ func SetupRouter(db *database.Database) *gin.Engine {
 		// Users routes group
 		users := v1.Group("/users")
 		{
-			// Add your user routes here
-			// users.POST("/", handlers.CreateUser)
-			// users.GET("/:id", handlers.GetUser)
-			// users.PUT("/:id", handlers.UpdateUser)
-			// users.DELETE("/:id", handlers.DeleteUser)
+			users.GET("/:id", handler.GetUser)
+			users.POST("/", handler.CreateUser)
+			users.PUT("/:id", handler.UpdateUser)
+			users.DELETE("/:id", handler.DeleteUser)
 		}
-		logger.Info("Routes initialized successfully", zap.String("routes", users.BasePath()))
 	}
 
 	logger.Info("Routes initialized successfully")
 	return router
-}
-
-// healthCheck handler for the health check endpoint
-func healthCheck(c *gin.Context) {
-	logger.Info("Health check requested")
-	c.JSON(200, gin.H{
-		"status":  "healthy",
-		"service": "user-service",
-	})
 }
